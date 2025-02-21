@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart'; // create merge pathes (win , android , ios ..etc)
-import 'package:taxi_grad/core/utils/app_strings.dart' show AppStrings;
+import 'package:taxi_grad/core/utils/app_texts.dart' show AppTexts;
 
 class DBHelper {
   static final DBHelper singleton = DBHelper.internal();
@@ -31,33 +31,33 @@ class DBHelper {
 
   void onCreate(Database db, int newVersion) async {
     await db.execute(
-        'CREATE TABLE ${AppStrings.tbZoneList} (${AppStrings.zoneId} TEXT PRIMARY KEY, '
-        '${AppStrings.zoneName} TEXT, ${AppStrings.zoneJson} TEXT, ${AppStrings.city} TEXT, '
-        '${AppStrings.tax} TEXT, ${AppStrings.status} Text, ${AppStrings.createdDate} Text, ${AppStrings.modifyDate} Text)');
+        'CREATE TABLE ${AppTexts.tbZoneList} (${AppTexts.zoneId} TEXT PRIMARY KEY, '
+        '${AppTexts.zoneName} TEXT, ${AppTexts.zoneJson} TEXT, ${AppTexts.city} TEXT, '
+        '${AppTexts.tax} TEXT, ${AppTexts.status} Text, ${AppTexts.createdDate} Text, ${AppTexts.modifyDate} Text)');
 
     await db.execute(
-        'CREATE TABLE ${AppStrings.tbServiceDetail} (${AppStrings.serviceId} TEXT PRIMARY KEY, '
-        '${AppStrings.serviceName} TEXT, ${AppStrings.seat} TEXT, ${AppStrings.color} TEXT, '
-        '${AppStrings.icon} TEXT, ${AppStrings.topIcon} TEXT, ${AppStrings.gender} TEXT, '
-        '${AppStrings.description} TEXT, ${AppStrings.status} TEXT, ${AppStrings.createdDate} TEXT, ${AppStrings.modifyDate} TEXT)');
+        'CREATE TABLE ${AppTexts.tbServiceDetail} (${AppTexts.serviceId} TEXT PRIMARY KEY, '
+        '${AppTexts.serviceName} TEXT, ${AppTexts.seat} TEXT, ${AppTexts.color} TEXT, '
+        '${AppTexts.icon} TEXT, ${AppTexts.topIcon} TEXT, ${AppTexts.gender} TEXT, '
+        '${AppTexts.description} TEXT, ${AppTexts.status} TEXT, ${AppTexts.createdDate} TEXT, ${AppTexts.modifyDate} TEXT)');
 
     await db.execute(
-        'CREATE TABLE ${AppStrings.tbPriceDetail} (${AppStrings.priceId} TEXT PRIMARY KEY, '
-        '${AppStrings.zoneId} TEXT, ${AppStrings.serviceId} TEXT, ${AppStrings.baseCharge} TEXT, '
-        '${AppStrings.perKmCharge} TEXT, ${AppStrings.perMinCharge} TEXT, ${AppStrings.bookingCharge} TEXT, '
-        '${AppStrings.miniFair} TEXT, ${AppStrings.miniKm} TEXT, ${AppStrings.cancelCharge} TEXT, '
-        '${AppStrings.tax} TEXT, ${AppStrings.status} TEXT, ${AppStrings.createdDate} TEXT, ${AppStrings.modifyDate} TEXT)');
+        'CREATE TABLE ${AppTexts.tbPriceDetail} (${AppTexts.priceId} TEXT PRIMARY KEY, '
+        '${AppTexts.zoneId} TEXT, ${AppTexts.serviceId} TEXT, ${AppTexts.baseCharge} TEXT, '
+        '${AppTexts.perKmCharge} TEXT, ${AppTexts.perMinCharge} TEXT, ${AppTexts.bookingCharge} TEXT, '
+        '${AppTexts.miniFair} TEXT, ${AppTexts.miniKm} TEXT, ${AppTexts.cancelCharge} TEXT, '
+        '${AppTexts.tax} TEXT, ${AppTexts.status} TEXT, ${AppTexts.createdDate} TEXT, ${AppTexts.modifyDate} TEXT)');
 
     await db.execute(
-        'CREATE TABLE ${AppStrings.tbDocument} (${AppStrings.docId} TEXT PRIMARY KEY, '
-        '${AppStrings.name} TEXT, ${AppStrings.type} TEXT, ${AppStrings.status} TEXT, '
-        '${AppStrings.createdDate} TEXT, ${AppStrings.modifyDate} TEXT)');
+        'CREATE TABLE ${AppTexts.tbDocument} (${AppTexts.docId} TEXT PRIMARY KEY, '
+        '${AppTexts.name} TEXT, ${AppTexts.type} TEXT, ${AppTexts.status} TEXT, '
+        '${AppTexts.createdDate} TEXT, ${AppTexts.modifyDate} TEXT)');
 
     await db.execute(
-        'CREATE TABLE ${AppStrings.tbZoneDocument} (${AppStrings.zoneDocId} TEXT PRIMARY KEY, '
-        '${AppStrings.zoneId} TEXT, ${AppStrings.serviceId} TEXT, ${AppStrings.personalDoc} TEXT, '
-        '${AppStrings.carDoc} TEXT, ${AppStrings.requiredPersonalDoc} TEXT, ${AppStrings.requiredCarDoc} TEXT, '
-        '${AppStrings.status} TEXT, ${AppStrings.createdDate} TEXT, ${AppStrings.modifyDate} TEXT)');
+        'CREATE TABLE ${AppTexts.tbZoneDocument} (${AppTexts.zoneDocId} TEXT PRIMARY KEY, '
+        '${AppTexts.zoneId} TEXT, ${AppTexts.serviceId} TEXT, ${AppTexts.personalDoc} TEXT, '
+        '${AppTexts.carDoc} TEXT, ${AppTexts.requiredPersonalDoc} TEXT, ${AppTexts.requiredCarDoc} TEXT, '
+        '${AppTexts.status} TEXT, ${AppTexts.createdDate} TEXT, ${AppTexts.modifyDate} TEXT)');
 
     debugPrint("Database tables created");
   }
@@ -65,11 +65,11 @@ class DBHelper {
   static Future dbClearAll() async {
     if (_db == null) return;
 
-    await _db?.execute('DELETE FROM ${AppStrings.tbZoneList}');
-    await _db?.execute('DELETE FROM ${AppStrings.tbServiceDetail}');
-    await _db?.execute('DELETE FROM ${AppStrings.tbPriceDetail}');
-    await _db?.execute('DELETE FROM ${AppStrings.tbDocument}');
-    await _db?.execute('DELETE FROM ${AppStrings.tbZoneDocument}');
+    await _db?.execute('DELETE FROM ${AppTexts.tbZoneList}');
+    await _db?.execute('DELETE FROM ${AppTexts.tbServiceDetail}');
+    await _db?.execute('DELETE FROM ${AppTexts.tbPriceDetail}');
+    await _db?.execute('DELETE FROM ${AppTexts.tbDocument}');
+    await _db?.execute('DELETE FROM ${AppTexts.tbZoneDocument}');
   }
 
   static Future dbClearTable(String table) async {

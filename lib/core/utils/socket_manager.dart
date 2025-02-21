@@ -1,19 +1,23 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
-import 'package:taxi_driver/common/globs.dart';
-import 'package:taxi_driver/common/service_call.dart';
-import 'package:taxi_grad/core/utils/globs.dart' show Globs, SVKey;
+import 'package:socket_io_client/socket_io_client.dart' as socket_io;
+// import 'package:taxi_driver/common/globs.dart';
+// import 'package:taxi_driver/common/service_call.dart';
+import 'package:taxi_grad/core/functions/print_statement.dart';
+import 'package:taxi_grad/core/utils/app_texts.dart';
+import 'package:taxi_grad/core/utils/globs.dart' show Globs;
+import 'package:taxi_grad/core/utils/service_call.dart';
+import 'package:taxi_grad/core/utils/svkey.dart';
 
 class SocketManager {
   static final SocketManager sigleton = SocketManager._internal();
   SocketManager._internal();
-  IO.Socket? socket;
+  socket_io.Socket? socket;
   static SocketManager get shared => sigleton;
 
   void initSocket() {
-    socket = IO.io(SVKey.mainUrl, {
+    socket = socket_io.io(SVKey.mainUrl, {
       "transports": ['websocket'],
       "autoConnect": true
     });
@@ -25,7 +29,7 @@ class SocketManager {
 
       //Emit Method
 
-      if (Globs.udValueBool(Globs.userLogin)) {
+      if (Globs.udValueBool(AppTexts.userLogin)) {
         updateSocketIdApi();
       }
     });
@@ -54,8 +58,8 @@ class SocketManager {
     // Out Socket Emit Listener
 
     socket?.on("UpdateSocket", (data) {
-      print(" UpdateSocket : ---------------- ");
-      print(data);
+      printHere(" UpdateSocket : ---------------- ");
+      printHere(data);
     });
   }
 

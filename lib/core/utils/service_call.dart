@@ -7,8 +7,14 @@ import 'package:sqflite/sqflite.dart';
 
 import 'package:taxi_grad/core/database/cache/db_helper.dart' show DBHelper;
 import 'package:taxi_grad/core/functions/print_statement.dart';
-import 'package:taxi_grad/core/utils/app_strings.dart';
-import 'package:taxi_grad/core/utils/globs.dart' show KKey, SVKey;
+import 'package:taxi_grad/core/models/document_model.dart';
+import 'package:taxi_grad/core/models/price_detail_mode.dart';
+import 'package:taxi_grad/core/models/service_detail_model.dart'
+    show ServiceDetailModel;
+import 'package:taxi_grad/core/models/zone_document_model.dart';
+import 'package:taxi_grad/core/models/zone_list_model.dart';
+import 'package:taxi_grad/core/utils/app_texts.dart';
+// import 'package:taxi_grad/core/utils/globs.dart' show KKey, SVKey;
 import 'package:taxi_grad/core/utils/kkey.dart';
 import 'package:taxi_grad/core/utils/svkey.dart';
 
@@ -126,31 +132,30 @@ class ServiceCall {
           var batch = db?.batch();
 
           for (var zObj in (payload["zone_list"] as List? ?? [])) {
-            batch?.insert(
-                AppStrings.tbZoneList, ZoneListModel.map(zObj).toMap(),
+            batch?.insert(AppTexts.tbZoneList, ZoneListModel.map(zObj).toMap(),
                 conflictAlgorithm: ConflictAlgorithm.replace);
           }
 
           for (var sObj in (payload["service_detail"] as List? ?? [])) {
-            batch?.insert(AppStrings.tbServiceDetail,
-                ServiceDetailModel.map(sObj).toMap(),
+            batch?.insert(
+                AppTexts.tbServiceDetail, ServiceDetailModel.map(sObj).toMap(),
                 conflictAlgorithm: ConflictAlgorithm.replace);
           }
 
           for (var pObj in (payload["price_detail"] as List? ?? [])) {
             batch?.insert(
-                DBHelper.tbPriceDetail, PriceDetailModel.map(pObj).toMap(),
+                AppTexts.tbPriceDetail, PriceDetailModel.map(pObj).toMap(),
                 conflictAlgorithm: ConflictAlgorithm.replace);
           }
 
           for (var dObj in (payload["document"] as List? ?? [])) {
-            batch?.insert(DBHelper.tbDocument, DocumentModel.map(dObj).toMap(),
+            batch?.insert(AppTexts.tbDocument, DocumentModel.map(dObj).toMap(),
                 conflictAlgorithm: ConflictAlgorithm.replace);
           }
 
           for (var dObj in (payload["zone_document"] as List? ?? [])) {
             batch?.insert(
-                AppStrings.tbZoneDocument, ZoneDocumentModel.map(dObj).toMap(),
+                AppTexts.tbZoneDocument, ZoneDocumentModel.map(dObj).toMap(),
                 conflictAlgorithm: ConflictAlgorithm.replace);
           }
 

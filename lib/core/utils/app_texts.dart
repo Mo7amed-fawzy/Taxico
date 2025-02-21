@@ -1,4 +1,10 @@
-abstract class AppStrings {
+abstract class AppTexts {
+  //Globs
+  static const appName = "Taxi Driver";
+
+  static const userPayload = "user_payload";
+  static const userLogin = "user_login";
+
   // Table Names
   static const String tbZoneList = 'zone_list';
   static const String tbServiceDetail = 'service_detail';

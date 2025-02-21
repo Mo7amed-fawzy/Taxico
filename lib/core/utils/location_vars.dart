@@ -1,14 +1,23 @@
-import 'dart:async' show StreamSubscription;
+import 'dart:async';
+import 'package:geolocator/geolocator.dart';
 
-import 'package:geolocator/geolocator.dart' show GeolocatorPlatform, Position;
+class AppVars {
+  // make the class singelton
+  static final AppVars _instance =
+      AppVars._internal(); //private constructor (one object)
 
-abstract class AppVars {
-  static bool positionSteamStarted = true;
-  static StreamSubscription<Position>? positionStreamSub;
-  static Position? lastLocation;
-  static final GeolocatorPlatform geolocatorPlatform =
-      GeolocatorPlatform.instance;
+  factory AppVars() {
+    return _instance;
+  }
 
-  static bool isSaveFileLocation = false;
-  static int bookingId = 0;
+  AppVars._internal();
+
+  // vars
+  bool positionSteamStarted = true;
+  StreamSubscription<Position>? positionStreamSub;
+  Position? lastLocation;
+  final GeolocatorPlatform geolocatorPlatform = GeolocatorPlatform.instance;
+
+  bool isSaveFileLocation = false;
+  int bookingId = 0;
 }

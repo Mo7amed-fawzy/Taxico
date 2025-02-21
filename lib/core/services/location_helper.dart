@@ -37,7 +37,7 @@ class LocationHelper {
 
     if (serviceStatusStreamSub == null) {
       final serviceStatusStream =
-          AppVars.geolocatorPlatform.getServiceStatusStream();
+          AppVars().geolocatorPlatform.getServiceStatusStream();
       serviceStatusStreamSub = serviceStatusStream.handleError((error) {
         serviceStatusStreamSub?.cancel();
         serviceStatusStreamSub = null;
@@ -45,15 +45,15 @@ class LocationHelper {
         String serviceStatusValue;
 
         if (serviceStatus == ServiceStatus.enabled) {
-          if (AppVars.positionSteamStarted) {
+          if (AppVars().positionSteamStarted) {
             //Start Location Listen logic
             locationChangeListening();
           }
           serviceStatusValue = "enabled";
         } else {
-          if (AppVars.positionStreamSub != null) {
-            AppVars.positionStreamSub?.cancel();
-            AppVars.positionStreamSub = null;
+          if (AppVars().positionStreamSub != null) {
+            AppVars().positionStreamSub?.cancel();
+            AppVars().positionStreamSub = null;
 
             printHere("Position Stream han been canceled");
           }
@@ -66,15 +66,15 @@ class LocationHelper {
   }
 
   void locationSendPause() {
-    if (AppVars.positionStreamSub != null) {
-      AppVars.positionStreamSub?.cancel();
-      AppVars.positionStreamSub = null;
-      AppVars.positionSteamStarted = false;
+    if (AppVars().positionStreamSub != null) {
+      AppVars().positionStreamSub?.cancel();
+      AppVars().positionStreamSub = null;
+      AppVars().positionSteamStarted = false;
     }
   }
 
   void locationSendStart() {
-    if (AppVars.positionSteamStarted) {
+    if (AppVars().positionSteamStarted) {
       return;
     }
 
@@ -85,15 +85,16 @@ class LocationHelper {
     bool serviceEnable;
     LocationPermission permission;
 
-    serviceEnable = await AppVars.geolocatorPlatform.isLocationServiceEnabled();
+    serviceEnable =
+        await AppVars().geolocatorPlatform.isLocationServiceEnabled();
 
     if (!serviceEnable) {
       return false;
     }
 
-    permission = await AppVars.geolocatorPlatform.checkPermission();
+    permission = await AppVars().geolocatorPlatform.checkPermission();
     if (permission == LocationPermission.denied) {
-      permission = await AppVars.geolocatorPlatform.requestPermission();
+      permission = await AppVars().geolocatorPlatform.requestPermission();
       if (permission == LocationPermission.denied) {
         return false;
       }
@@ -107,7 +108,7 @@ class LocationHelper {
   }
 
   void startRideLocationSave(int bId, Position position) {
-    AppVars.bookingId = bId;
+    AppVars().bookingId = bId;
 
     try {
       File("$saveFilePath/$AppVars.bookingId.txt").writeAsStringSync(
@@ -115,15 +116,15 @@ class LocationHelper {
           mode: FileMode.append);
 
       debugPrint("Save Location ---");
-      AppVars.isSaveFileLocation = true;
+      AppVars().isSaveFileLocation = true;
     } catch (e) {
       debugPrint(e.toString());
     }
   }
 
   void stopRideLocationSave() {
-    AppVars.isSaveFileLocation = false;
-    AppVars.bookingId = 0;
+    AppVars().isSaveFileLocation = false;
+    AppVars().bookingId = 0;
   }
 
   Future<Directory> getSavePath() async {
