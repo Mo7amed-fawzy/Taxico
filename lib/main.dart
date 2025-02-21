@@ -1,14 +1,24 @@
-import 'dart:io';
-
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:taxi_grad/core/services/service_locator.dart';
+import 'package:taxi_grad/core/utils/app_colors.dart';
+import 'package:taxi_grad/core/utils/app_texts.dart';
+import 'package:taxi_grad/core/utils/globs.dart';
+import 'package:taxi_grad/core/utils/service_call.dart';
+import 'package:taxi_grad/core/utils/socket_manager.dart';
+import 'package:taxi_grad/features/login/manager/cubit/login_cubit.dart';
+import 'package:taxi_grad/features/login/presentation/splash_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  prefs = await SharedPreferences.getInstance();
+  await setupLocator();
+
   await Firebase.initializeApp();
-  if (Globs.udValueBool(Globs.userLogin)) {
-    ServiceCall.userObj = Globs.udValue(Globs.userPayload) as Map? ?? {};
+  if (Globs.udValueBool(AppTexts.userLogin)) {
+    ServiceCall.userObj = Globs.udValue(AppTexts.userPayload) as Map? ?? {};
     ServiceCall.userType = ServiceCall.userObj["user_type"] as int? ?? 1;
   }
   SocketManager.shared.initSocket();
