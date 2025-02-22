@@ -42,7 +42,8 @@ class CarDocumentRow extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
                   decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
+                      // color: statusColor.withOpacity(0.1),
+                      color: statusColor.withAlpha((0.1 * 255).round()),
                       borderRadius: BorderRadius.circular(5),
                       border: Border.all(color: statusColor, width: 0.5)),
                   child: Text(

@@ -8,6 +8,7 @@ import 'package:taxi_grad/core/utils/kkey.dart';
 import 'package:taxi_grad/core/utils/service_call.dart';
 import 'package:taxi_grad/features/login/presentation/change_language_view.dart';
 import 'package:taxi_grad/features/login/presentation/profile_image_view.dart';
+import 'package:taxi_grad/features/user/user_home_view.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});

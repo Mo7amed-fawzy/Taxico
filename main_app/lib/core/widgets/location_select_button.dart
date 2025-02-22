@@ -48,7 +48,9 @@ class LocationSelectButton extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
-                      color: isSelect ? color.withOpacity(0.2) : Colors.black12,
+                      color: isSelect
+                          ? color.withAlpha((0.2 * 255).round())
+                          : Colors.black12,
                       blurRadius: 2,
                       spreadRadius: 2)
                 ]),

@@ -2,12 +2,19 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:taxi_grad/core/extentions/app_context.dart';
+import 'package:taxi_grad/core/extentions/md_extension_state.dart';
 import 'package:taxi_grad/core/utils/app_colors.dart';
+import 'package:taxi_grad/core/utils/app_texts.dart';
+import 'package:taxi_grad/core/utils/globs.dart';
+import 'package:taxi_grad/core/utils/kkey.dart';
+import 'package:taxi_grad/core/utils/msg.dart';
 import 'package:taxi_grad/core/utils/service_call.dart';
+import 'package:taxi_grad/core/utils/svkey.dart';
 import 'package:taxi_grad/core/widgets/image_picker_view.dart';
 import 'package:taxi_grad/core/widgets/popup_layout.dart';
 import 'package:taxi_grad/core/widgets/round_button.dart';
 import 'package:taxi_grad/features/login/presentation/driver_edit_profile_view.dart';
+import 'package:taxi_grad/features/menu/edit_profile_view.dart';
 
 class ProfileImageView extends StatefulWidget {
   final bool showBack;
@@ -124,7 +131,7 @@ class _ProfileImageViewState extends State<ProfileImageView> {
       Globs.hideHUD();
       if ((responseObj[KKey.status] ?? "") == "1") {
         ServiceCall.userObj = responseObj[KKey.payload] as Map? ?? {};
-        Globs.udSet(ServiceCall.userObj, Globs.userPayload);
+        Globs.udSet(ServiceCall.userObj, AppTexts.userPayload);
         mdShowAlert("", responseObj[KKey.message] ?? MSG.success, () {});
       } else {
         mdShowAlert("Error", responseObj[KKey.message] ?? MSG.fail, () {});

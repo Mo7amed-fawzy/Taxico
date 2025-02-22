@@ -4,17 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class PopupLayout extends ModalRoute {
-
   EdgeInsets? margin;
   Color? bgColor;
   final Widget child;
-
 
   PopupLayout({Key? key, this.bgColor, required this.child, this.margin});
 
   @override
   // TODO: implement barrierColor
-  Color? get barrierColor => bgColor ?? Colors.black.withOpacity(0.5);
+  Color? get barrierColor =>
+      bgColor ?? Colors.black.withAlpha((0.5 * 255).round());
 
   @override
   // TODO: implement barrierDismissible
@@ -25,18 +24,25 @@ class PopupLayout extends ModalRoute {
   String? get barrierLabel => null;
 
   @override
-  Widget buildPage(BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) {
-      margin ??= const EdgeInsets.all(0);
+  Widget buildPage(BuildContext context, Animation<double> animation,
+      Animation<double> secondaryAnimation) {
+    margin ??= const EdgeInsets.all(0);
 
-      return GestureDetector(
-        onTap: (){
-          SystemChannels.textInput.invokeMethod("TextInput.hide");
-        },
-        child: Material(
-          type: MaterialType.transparency,
-          child: BackdropFilter(filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5,), child: buildOverlayContent(context), ),
+    return GestureDetector(
+      onTap: () {
+        SystemChannels.textInput.invokeMethod("TextInput.hide");
+      },
+      child: Material(
+        type: MaterialType.transparency,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+            sigmaX: 5,
+            sigmaY: 5,
+          ),
+          child: buildOverlayContent(context),
         ),
-      );
+      ),
+    );
   }
 
   @override
@@ -71,5 +77,4 @@ class PopupLayout extends ModalRoute {
       ),
     );
   }
-  
 }

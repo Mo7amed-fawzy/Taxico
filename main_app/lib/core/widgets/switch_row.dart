@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:taxi_grad/core/utils/app_colors.dart';
 
 class SwitchRow extends StatelessWidget {
