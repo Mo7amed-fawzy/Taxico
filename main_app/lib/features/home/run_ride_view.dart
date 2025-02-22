@@ -8,6 +8,7 @@ import 'package:flutter_timer_countdown/flutter_timer_countdown.dart';
 import 'package:taxi_grad/core/extentions/app_context.dart';
 import 'package:taxi_grad/core/extentions/md_extension_state.dart';
 import 'package:taxi_grad/core/functions/print_statement.dart';
+import 'package:taxi_grad/core/services/location_helper.dart';
 import 'package:taxi_grad/core/utils/app_colors.dart';
 import 'package:taxi_grad/core/utils/app_texts.dart';
 import 'package:taxi_grad/core/utils/globs.dart';
@@ -20,12 +21,12 @@ import 'package:taxi_grad/core/widgets/icon_title_button.dart';
 import 'package:taxi_grad/core/widgets/round_button.dart';
 import 'package:taxi_grad/features/home/support/support_message_view.dart';
 
-class UserRunRideView extends StatefulWidget {
+class RunRideView extends StatefulWidget {
   final Map rObj;
-  const UserRunRideView({super.key, required this.rObj});
+  const RunRideView({super.key, required this.rObj});
 
   @override
-  State<UserRunRideView> createState() => _UserRunRideViewState();
+  State<RunRideView> createState() => _RunRideViewState();
 }
 
 const bsPending = 0;
@@ -36,8 +37,7 @@ const bsStart = 4;
 const bsComplete = 5;
 const bsCancel = 6;
 
-class _UserRunRideViewState extends State<UserRunRideView>
-    with OSMMixinObserver {
+class _RunRideViewState extends State<RunRideView> with OSMMixinObserver {
   bool isOpen = true;
 
   Map rideObj = {};
@@ -55,9 +55,7 @@ class _UserRunRideViewState extends State<UserRunRideView>
 
   String timeCount = "...";
   String km = "...";
-
   double ratingVal = 5.0;
-
   @override
   void initState() {
     // TODO: implement initState
@@ -82,64 +80,18 @@ class _UserRunRideViewState extends State<UserRunRideView>
 
     controller.addObserver(this);
 
-    SocketManager.shared.socket?.on("driver_cancel_ride", (data) {
-      printHere("driver_cancel_ride socket get : ${data.toString()}");
+    SocketManager.shared.socket?.on("user_cancel_ride", (data) {
+      printHere("user_cancel_ride socket get : ${data.toString()}");
       if (data[KKey.status] == "1") {
         if (data[KKey.payload]["booking_id"] == rideObj["booking_id"]) {
           openUserRideCancelPopup();
         }
       }
     });
-
-    SocketManager.shared.socket?.on("driver_wait_user", (data) {
-      printHere("driver_wait_user socket get : ${data.toString()}");
-      if (data[KKey.status] == "1") {
-        if (data[KKey.payload]["booking_id"] == rideObj["booking_id"]) {
-          rideObj["booking_status"] = data[KKey.payload]["booking_status"];
-
-          if (mounted) {
-            setState(() {});
-          }
-        }
-      }
-    });
-
-    SocketManager.shared.socket?.on("ride_start", (data) {
-      printHere("ride_start socket get : ${data.toString()}");
-      if (data[KKey.status] == "1") {
-        if (data[KKey.payload]["booking_id"] == rideObj["booking_id"]) {
-          rideObj["booking_status"] = data[KKey.payload]["booking_status"];
-
-          loadMapRoad();
-        }
-      }
-    });
-
-    SocketManager.shared.socket?.on("ride_stop", (data) {
-      printHere("ride_stop socket get : ${data.toString()}");
-      if (data[KKey.status] == "1") {
-        if (data[KKey.payload]["booking_id"] == rideObj["booking_id"]) {
-          rideObj["booking_status"] = data[KKey.payload]["booking_status"];
-          rideObj["amt"] = data[KKey.payload]["amount"].toString();
-          rideObj["tax_amt"] = data[KKey.payload]["tax_amount"].toString();
-          rideObj["duration"] = data[KKey.payload]["duration"];
-          rideObj["total_distance"] =
-              data[KKey.payload]["total_distance"].toString();
-          rideObj["toll_tax"] = data[KKey.payload]["toll_tax"].toString();
-          loadMapRoad();
-
-          if (mounted) {
-            setState(() {});
-          }
-
-          showRideCompletedPopup();
-        }
-      }
-    });
   }
 
   void openUserRideCancelPopup() async {
-    mdShowAlert("Ride Cancel", "Driver cancel ride", () {
+    mdShowAlert("Ride Cancel", "User cancel ride", () {
       context.pop();
     }, isForce: true);
   }
@@ -423,7 +375,9 @@ class _UserRunRideViewState extends State<UserRunRideView>
                         const SizedBox(
                           height: 8,
                         ),
-                      if (isOpen)
+                      if (isOpen &&
+                          (rideObj["booking_status"] == bsWaitUser ||
+                              rideObj["booking_status"] == bsStart))
                         Padding(
                           padding: const EdgeInsets.all(15),
                           child: Row(
@@ -491,13 +445,17 @@ class _UserRunRideViewState extends State<UserRunRideView>
                             ],
                           ),
                         ),
-                      if (isOpen)
+                      if (isOpen &&
+                          (rideObj["booking_status"] == bsWaitUser ||
+                              rideObj["booking_status"] == bsStart))
                         const Divider(
                           height: 0.5,
                           endIndent: 20,
                           indent: 20,
                         ),
-                      if (isOpen)
+                      if (isOpen &&
+                          (rideObj["booking_status"] == bsWaitUser ||
+                              rideObj["booking_status"] == bsStart))
                         const SizedBox(
                           height: 8,
                         ),
@@ -538,14 +496,6 @@ class _UserRunRideViewState extends State<UserRunRideView>
                                               color: TColor.secondaryText,
                                               fontSize: 14),
                                         ),
-                                        if (rideObj["booking_status"] <=
-                                            bsWaitUser)
-                                          Text(
-                                            "OTP Code: ${rideObj["otp_code"] as String? ?? ""}",
-                                            style: TextStyle(
-                                                color: TColor.secondaryText,
-                                                fontSize: 14),
-                                          ),
                                       ],
                                     ),
                                   ],
@@ -684,6 +634,220 @@ class _UserRunRideViewState extends State<UserRunRideView>
                             ),
                           ],
                         ),
+                      const SizedBox(
+                        height: 15,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: RoundButton(
+                            title: rideObj["booking_status"] == bsGoUser
+                                ? "ARRIVED"
+                                : rideObj["booking_status"] == bsWaitUser
+                                    ? "START"
+                                    : "COMPLETE",
+                            onPressed: () async {
+                              if (rideObj["booking_status"] == bsGoUser) {
+                                // Api Calling Waiting For User
+                                apiWaitingForUser();
+                              } else if (rideObj["booking_status"] ==
+                                  bsWaitUser) {
+                                await showDialog(
+                                    context: context,
+                                    barrierColor: const Color(0xff32384D)
+                                        .withAlpha((0.4 * 255).round()),
+                                    builder: (context) {
+                                      return Dialog(
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10)),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(15),
+                                          width: context.width - 50,
+                                          height: 190,
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                "Enter OTP",
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                    color: TColor.primaryText,
+                                                    fontSize: 23,
+                                                    fontWeight:
+                                                        FontWeight.w600),
+                                              ),
+                                              Text(
+                                                "Please enter OTP",
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                    color: TColor.secondaryText,
+                                                    fontSize: 8),
+                                              ),
+                                              TextField(
+                                                controller: txtOTP,
+                                                keyboardType:
+                                                    TextInputType.number,
+                                                style: TextStyle(
+                                                  color: TColor.primaryText,
+                                                  fontSize: 16,
+                                                ),
+                                                decoration: InputDecoration(
+                                                  enabledBorder:
+                                                      InputBorder.none,
+                                                  focusedBorder:
+                                                      InputBorder.none,
+                                                  hintText: "----",
+                                                  hintStyle: TextStyle(
+                                                    color: TColor.secondaryText,
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                              ),
+                                              const Divider(),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.end,
+                                                children: [
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      context.pop();
+                                                    },
+                                                    child: Text(
+                                                      "CANCEL",
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      style: TextStyle(
+                                                          color: TColor.red,
+                                                          fontSize: 16,
+                                                          fontWeight:
+                                                              FontWeight.w600),
+                                                    ),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      context.pop();
+
+                                                      apiRideStart();
+                                                    },
+                                                    child: Text(
+                                                      "RIDE START",
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      style: TextStyle(
+                                                          color: TColor.primary,
+                                                          fontSize: 16,
+                                                          fontWeight:
+                                                              FontWeight.w600),
+                                                    ),
+                                                  )
+                                                ],
+                                              )
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    });
+                              } else if (rideObj["booking_status"] == bsStart) {
+                                await showDialog(
+                                    context: context,
+                                    barrierColor: const Color(0xff32384D)
+                                        .withAlpha((0.4 * 255).round()),
+                                    builder: (context) {
+                                      return Dialog(
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10)),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(15),
+                                          width: context.width - 50,
+                                          height: 190,
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                "Enter Toll Amount",
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                    color: TColor.primaryText,
+                                                    fontSize: 23,
+                                                    fontWeight:
+                                                        FontWeight.w600),
+                                              ),
+                                              Text(
+                                                "Please enter toll amount",
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                    color: TColor.secondaryText,
+                                                    fontSize: 8),
+                                              ),
+                                              TextField(
+                                                controller: txtToll,
+                                                keyboardType:
+                                                    TextInputType.number,
+                                                style: TextStyle(
+                                                  color: TColor.primaryText,
+                                                  fontSize: 16,
+                                                ),
+                                                decoration: InputDecoration(
+                                                  enabledBorder:
+                                                      InputBorder.none,
+                                                  focusedBorder:
+                                                      InputBorder.none,
+                                                  hintText: "\$0",
+                                                  hintStyle: TextStyle(
+                                                    color: TColor.secondaryText,
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                              ),
+                                              const Divider(),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.end,
+                                                children: [
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      context.pop();
+                                                    },
+                                                    child: Text(
+                                                      "CANCEL",
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      style: TextStyle(
+                                                          color: TColor.red,
+                                                          fontSize: 16,
+                                                          fontWeight:
+                                                              FontWeight.w600),
+                                                    ),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      context.pop();
+                                                      apiRideStop();
+                                                    },
+                                                    child: Text(
+                                                      "DONE",
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      style: TextStyle(
+                                                          color: TColor.primary,
+                                                          fontSize: 16,
+                                                          fontWeight:
+                                                              FontWeight.w600),
+                                                    ),
+                                                  )
+                                                ],
+                                              )
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    });
+                              }
+                            }),
+                      ),
                       const SizedBox(
                         height: 25,
                       ),
@@ -864,6 +1028,7 @@ class _UserRunRideViewState extends State<UserRunRideView>
   }
 
   void loadMapRoad() async {
+    await controller.clearAllRoads();
     if (rideObj["booking_status"] == bsGoUser ||
         rideObj["booking_status"] == bsWaitUser) {
       // Current to Pickup Location Road Draw
@@ -874,16 +1039,11 @@ class _UserRunRideViewState extends State<UserRunRideView>
                 double.tryParse(rideObj["pickup_long"].toString()) ?? 0.0)
       ], "pickup");
 
-      await controller.setStaticPosition([
-        GeoPoint(
-            latitude: double.tryParse(rideObj["drop_lat"].toString()) ?? 0.0,
-            longitude: double.tryParse(rideObj["drop_long"].toString()) ?? 0.0)
-      ], "dropoff");
-
       var roadInfo = await controller.drawRoad(
           GeoPoint(
-              latitude: double.tryParse(rideObj["lati"].toString()) ?? 0.0,
-              longitude: double.tryParse(rideObj["longi"].toString()) ?? 0.0),
+              latitude: LocationHelper.shared().lastLocation?.latitude ?? 0.0,
+              longitude:
+                  LocationHelper.shared().lastLocation?.longitude ?? 0.0),
           GeoPoint(
               latitude:
                   double.tryParse(rideObj["pickup_lat"].toString()) ?? 0.0,
@@ -892,6 +1052,10 @@ class _UserRunRideViewState extends State<UserRunRideView>
           roadType: RoadType.car,
           roadOption: const RoadOption(
               roadColor: Colors.blueAccent, roadBorderWidth: 3));
+
+      timeCount = ((roadInfo.duration ?? 0.0) / 60.0).toStringAsFixed(1);
+      km = ((roadInfo.distance ?? 0.0)).toStringAsFixed(1);
+
       timeCount = ((roadInfo.duration ?? 0.0) / 60.0).toStringAsFixed(1);
       km = ((roadInfo.distance ?? 0.0)).toStringAsFixed(1);
     } else {
@@ -904,8 +1068,9 @@ class _UserRunRideViewState extends State<UserRunRideView>
 
       var roadInfo = await controller.drawRoad(
           GeoPoint(
-              latitude: double.tryParse(rideObj["lati"].toString()) ?? 0.0,
-              longitude: double.tryParse(rideObj["longi"].toString()) ?? 0.0),
+              latitude: LocationHelper.shared().lastLocation?.latitude ?? 0.0,
+              longitude:
+                  LocationHelper.shared().lastLocation?.longitude ?? 0.0),
           GeoPoint(
               latitude: double.tryParse(rideObj["drop_lat"].toString()) ?? 0.0,
               longitude:
@@ -916,6 +1081,7 @@ class _UserRunRideViewState extends State<UserRunRideView>
       timeCount = ((roadInfo.duration ?? 0.0) / 60.0).toStringAsFixed(1);
       km = ((roadInfo.distance ?? 0.0)).toStringAsFixed(1);
     }
+
     if (mounted) {
       setState(() {});
     }
@@ -930,13 +1096,34 @@ class _UserRunRideViewState extends State<UserRunRideView>
 
   //TODO: ApiCalling
 
+  void apiWaitingForUser() {
+    Globs.showHUD();
+    ServiceCall.post({"booking_id": rideObj["booking_id"].toString()},
+        SVKey.svDriverWaitUser, isTokenApi: true,
+        withSuccess: (responseObj) async {
+      Globs.hideHUD();
+
+      if (responseObj[KKey.status] == "1") {
+        rideObj = responseObj[KKey.payload] as Map? ?? {};
+        if (mounted) {
+          setState(() {});
+        }
+      } else {
+        mdShowAlert(AppTexts.appName,
+            responseObj[KKey.message] as String? ?? MSG.fail, () {});
+      }
+    }, failure: (err) async {
+      Globs.hideHUD();
+      mdShowAlert(AppTexts.appName, err.toString(), () {});
+    });
+  }
+
   void apiCancelRide() {
     Globs.showHUD();
     ServiceCall.post({
       "booking_id": rideObj["booking_id"].toString(),
       "booking_status": rideObj["booking_status"].toString()
-    }, SVKey.svUserRideCancel, isTokenApi: true,
-        withSuccess: (responseObj) async {
+    }, SVKey.svRideCancel, isTokenApi: true, withSuccess: (responseObj) async {
       Globs.hideHUD();
 
       if (responseObj[KKey.status] == "1") {
@@ -944,6 +1131,78 @@ class _UserRunRideViewState extends State<UserRunRideView>
             responseObj[KKey.message] as String? ?? MSG.success, () {
           context.pop();
         });
+      } else {
+        mdShowAlert(AppTexts.appName,
+            responseObj[KKey.message] as String? ?? MSG.fail, () {});
+      }
+    }, failure: (err) async {
+      Globs.hideHUD();
+      mdShowAlert(AppTexts.appName, err.toString(), () {});
+    });
+  }
+
+  void apiRideStart() {
+    if (txtOTP.text.length != 4) {
+      mdShowAlert("Error", "Pleas valid OTP", () {});
+      return;
+    }
+
+    var startLocation = LocationHelper.shared().lastLocation;
+
+    if (startLocation == null) {
+      return;
+    }
+
+    Globs.showHUD();
+    ServiceCall.post({
+      "booking_id": rideObj["booking_id"].toString(),
+      "pickup_latitude": "${startLocation.latitude}",
+      "pickup_longitude": "${startLocation.longitude}",
+      "otp_code": txtOTP.text
+    }, SVKey.svRideStart, isTokenApi: true, withSuccess: (responseObj) async {
+      Globs.hideHUD();
+
+      if (responseObj[KKey.status] == "1") {
+        rideObj = responseObj[KKey.payload] as Map? ?? {};
+        LocationHelper.shared().startRideLocationSave(
+            rideObj["booking_id"] as int? ?? 0, startLocation);
+        loadMapRoad();
+      } else {
+        mdShowAlert(AppTexts.appName,
+            responseObj[KKey.message] as String? ?? MSG.fail, () {});
+      }
+    }, failure: (err) async {
+      Globs.hideHUD();
+      mdShowAlert(AppTexts.appName, err.toString(), () {});
+    });
+  }
+
+  void apiRideStop() {
+    var endLocation = LocationHelper.shared().lastLocation;
+
+    if (endLocation == null) {
+      return;
+    }
+    LocationHelper.shared().stopRideLocationSave();
+    Globs.showHUD();
+    ServiceCall.post({
+      "booking_id": rideObj["booking_id"].toString(),
+      "drop_latitude": "${endLocation.latitude}",
+      "drop_longitude": "${endLocation.longitude}",
+      "ride_location": LocationHelper.shared()
+          .getRideSaveLocationJsonString(rideObj["booking_id"] as int? ?? 0),
+      "toll_tax": txtToll.text == "" ? "0" : txtToll.text
+    }, SVKey.svRideStop, isTokenApi: true, withSuccess: (responseObj) async {
+      Globs.hideHUD();
+
+      if (responseObj[KKey.status] == "1") {
+        rideObj = responseObj[KKey.payload] as Map? ?? {};
+        if (mounted) {
+          setState(() {});
+        }
+
+        mdShowAlert("Ride Completed",
+            responseObj[KKey.message] as String? ?? MSG.success, () {});
       } else {
         mdShowAlert(AppTexts.appName,
             responseObj[KKey.message] as String? ?? MSG.fail, () {});
@@ -986,17 +1245,15 @@ class _UserRunRideViewState extends State<UserRunRideView>
   String statusName() {
     switch (rideObj["booking_status"]) {
       case 2:
-        return "On Way Driver";
+        return "Pickup Up ";
       case 3:
-        return "Waiting Driver";
+        return "Waiting For ";
       case 4:
         return "Ride Started With";
       case 5:
         return "Ride Complete With";
       case 6:
         return "Ride Cancel";
-      case 7:
-        return "No Driver Found";
       default:
         return "Finding Driver Near By";
     }
@@ -1038,241 +1295,5 @@ class _UserRunRideViewState extends State<UserRunRideView>
       default:
         return Colors.blue;
     }
-  }
-
-  void showRideCompletedPopup() async {
-    var taxAmt = double.tryParse(rideObj["tax_amt"] ?? "0.0") ?? 0.0;
-    var tollAmt = double.tryParse(rideObj["toll_tax"] ?? "0.0") ?? 0.0;
-    var payableAmt = double.tryParse(rideObj["amt"] ?? "0.0") ?? 0.0;
-    var totalAmt = payableAmt - tollAmt - taxAmt;
-
-    await showModalBottomSheet(
-        backgroundColor: Colors.transparent,
-        barrierColor: Colors.transparent,
-        isScrollControlled: true,
-        context: context,
-        builder: (context) {
-          return Stack(
-            alignment: Alignment.bottomCenter,
-            children: [
-              BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                child: Container(
-                  color: Colors.black38,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(10),
-                      topRight: Radius.circular(10),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 10,
-                          offset: Offset(0, -5))
-                    ]),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      "Ride Completed",
-                      style: TextStyle(
-                        color: TColor.primaryText,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 15,
-                    ),
-                    const Divider(),
-                    const SizedBox(
-                      height: 15,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Payment Mode:",
-                          style: TextStyle(
-                              color: TColor.primaryText, fontSize: 20),
-                        ),
-                        Text(
-                          (rideObj["payment_type"] ?? 1) == 1
-                              ? "COD"
-                              : "ONLINE",
-                          style: TextStyle(
-                            color: TColor.primary,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 15,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Total Distance:",
-                          style: TextStyle(
-                              color: TColor.primaryText, fontSize: 17),
-                        ),
-                        Text(
-                          "${(double.tryParse(rideObj["total_distance"] ?? "0") ?? 0.0).toStringAsFixed(2)} KM",
-                          style: TextStyle(
-                            color: TColor.primaryText,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Total Duration:",
-                          style: TextStyle(
-                              color: TColor.primaryText, fontSize: 17),
-                        ),
-                        Text(
-                          rideObj["duration"] ?? " 00:00",
-                          style: TextStyle(
-                            color: TColor.primaryText,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 15,
-                    ),
-                    const Divider(),
-                    const SizedBox(
-                      height: 15,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Total Amount:",
-                          style: TextStyle(
-                              color: TColor.primaryText, fontSize: 17),
-                        ),
-                        Text(
-                          "\$${totalAmt.toStringAsFixed(2)}",
-                          style: TextStyle(
-                            color: TColor.primaryText,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Tax Amount:",
-                          style: TextStyle(
-                              color: TColor.primaryText, fontSize: 17),
-                        ),
-                        Text(
-                          "+\$${taxAmt.toStringAsFixed(2)}",
-                          style: TextStyle(
-                            color: TColor.primaryText,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Toll Tax:",
-                          style: TextStyle(
-                              color: TColor.primaryText, fontSize: 17),
-                        ),
-                        Text(
-                          "+\$${tollAmt.toStringAsFixed(2)}",
-                          style: TextStyle(
-                            color: TColor.primaryText,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Container(
-                          width: 90,
-                          height: 2,
-                          color: TColor.primaryText,
-                        )
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 15,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Payable Amount:",
-                          style: TextStyle(
-                              color: TColor.primaryText,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700),
-                        ),
-                        Text(
-                          "\$${payableAmt.toStringAsFixed(2)}",
-                          style: TextStyle(
-                            color: TColor.primaryText,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 15,
-                    ),
-                    RoundButton(
-                        title: "Yes, Accept Toll Tax",
-                        type: RoundButtonType.red,
-                        onPressed: () {
-                          // context.pop();
-                          context.pop();
-                        }),
-                    const SizedBox(
-                      height: 15,
-                    ),
-                    RoundButton(
-                        title: "No",
-                        onPressed: () {
-                          // context.pop();
-                          context.pop();
-                        }),
-                    const SizedBox(
-                      height: 15,
-                    ),
-                  ],
-                ),
-              )
-            ],
-          );
-        });
   }
 }

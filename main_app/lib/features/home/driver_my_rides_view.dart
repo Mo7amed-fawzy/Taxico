@@ -11,22 +11,24 @@ import 'package:taxi_grad/core/utils/msg.dart';
 import 'package:taxi_grad/core/utils/service_call.dart';
 import 'package:taxi_grad/core/utils/svkey.dart';
 import 'package:taxi_grad/features/home/tip_detail_view.dart';
+import 'package:taxi_grad/features/user/user_run_ride_view.dart';
 
-class UserMyRidesView extends StatefulWidget {
-  const UserMyRidesView({super.key});
+class DriverMyRidesView extends StatefulWidget {
+  const DriverMyRidesView({super.key});
 
   @override
-  State<UserMyRidesView> createState() => _UserMyRidesViewState();
+  State<DriverMyRidesView> createState() => _DriverMyRidesViewState();
 }
 
-class _UserMyRidesViewState extends State<UserMyRidesView> {
+class _DriverMyRidesViewState extends State<DriverMyRidesView> {
   List ridesArr = [];
+  double totalAmount = 0.0;
+  double driverAmount = 0.0;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-
     apiAllRidesList();
   }
 
@@ -54,11 +56,28 @@ class _UserMyRidesViewState extends State<UserMyRidesView> {
               fontSize: 18,
               fontWeight: FontWeight.w800),
         ),
+        actions: [
+          TextButton(
+              onPressed: () {},
+              child: Text(
+                "\$${totalAmount.toStringAsFixed(2)}",
+                style: TextStyle(
+                    color: TColor.primary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800),
+              ))
+        ],
       ),
       body: ListView.separated(
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
           itemBuilder: (context, index) {
             var rObj = ridesArr[index] as Map? ?? {};
+
+            var km = double.tryParse(rObj["total_distance"].toString()) ?? 0.0;
+            var rideTotalAmount =
+                double.tryParse(rObj["amount"].toString()) ?? 0.0;
+            var driverAmount =
+                double.tryParse(rObj["driver_amt"].toString()) ?? 0.0;
             return InkWell(
               onTap: () {
                 context.push(TipDetailsView(obj: rObj));
@@ -141,33 +160,125 @@ class _UserMyRidesViewState extends State<UserMyRidesView> {
                         ),
                       ],
                     ),
+                    if (rObj["booking_status"] >= bsStart)
+                      const SizedBox(
+                        height: 8,
+                      ),
+                    if (rObj["booking_status"] >= bsStart)
+                      Row(
+                        children: [
+                          Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                                color: TColor.primary,
+                                borderRadius: BorderRadius.circular(10)),
+                          ),
+                          const SizedBox(
+                            width: 15,
+                          ),
+                          Expanded(
+                            child: Text(
+                              rObj["drop_address"] as String? ?? "",
+                              maxLines: 2,
+                              style: TextStyle(
+                                color: TColor.primaryText,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     const SizedBox(
                       height: 8,
                     ),
-                    Row(
-                      children: [
-                        Container(
-                          width: 10,
-                          height: 10,
-                          decoration: BoxDecoration(
-                              color: TColor.primary,
-                              borderRadius: BorderRadius.circular(10)),
-                        ),
-                        const SizedBox(
-                          width: 15,
-                        ),
-                        Expanded(
-                          child: Text(
-                            rObj["drop_address"] as String? ?? "",
-                            maxLines: 2,
-                            style: TextStyle(
-                              color: TColor.primaryText,
-                              fontSize: 15,
-                            ),
+                    if (rObj["booking_status"] == bsComplete)
+                      Column(
+                        children: [
+                          const Divider(),
+                          const SizedBox(
+                            height: 8,
                           ),
-                        ),
-                      ],
-                    ),
+                          Row(
+                            children: [
+                              Text(
+                                "Total Distance: ",
+                                maxLines: 2,
+                                style: TextStyle(
+                                    color: TColor.primaryText,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700),
+                              ),
+                              Text(
+                                "${km.toStringAsFixed(1)} KM",
+                                maxLines: 2,
+                                style: TextStyle(
+                                  color: TColor.primaryText,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              const Spacer(),
+                              Text(
+                                "Duration: ",
+                                maxLines: 2,
+                                style: TextStyle(
+                                    color: TColor.primaryText,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700),
+                              ),
+                              Text(
+                                rObj["duration"].toString(),
+                                maxLines: 2,
+                                style: TextStyle(
+                                  color: TColor.primaryText,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(
+                            height: 15,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Driver Amount: ",
+                                style: TextStyle(
+                                    color: TColor.primaryText,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700),
+                              ),
+                              Text(
+                                "\$${driverAmount.toStringAsFixed(2)}",
+                                style: TextStyle(
+                                    color: TColor.secondary,
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w700),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Total Amount: ",
+                                style: TextStyle(
+                                    color: TColor.primaryText,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700),
+                              ),
+                              Text(
+                                "\$${rideTotalAmount.toStringAsFixed(2)}",
+                                style: TextStyle(
+                                    color: TColor.primary,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w800),
+                              ),
+                            ],
+                          ),
+                        ],
+                      )
                   ],
                 ),
               ),
@@ -184,11 +295,15 @@ class _UserMyRidesViewState extends State<UserMyRidesView> {
 
   void apiAllRidesList() {
     Globs.showHUD();
-    ServiceCall.post({}, SVKey.svUserAllRides, isTokenApi: true,
+    ServiceCall.post({}, SVKey.svDriverAllRides, isTokenApi: true,
         withSuccess: (responseObj) async {
       Globs.hideHUD();
       if (responseObj[KKey.status] == "1") {
-        ridesArr = responseObj[KKey.payload] as List? ?? [];
+        var payloadObj = responseObj[KKey.payload] as Map? ?? {};
+        ridesArr = payloadObj["ride_list"] as List? ?? [];
+        totalAmount = double.tryParse(payloadObj["total"].toString()) ?? 0.0;
+        driverAmount =
+            double.tryParse(payloadObj["driver_total"].toString()) ?? 0.0;
 
         if (mounted) {
           setState(() {});

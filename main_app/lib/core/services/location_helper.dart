@@ -22,6 +22,7 @@ class LocationHelper {
   factory LocationHelper() => singleton;
   LocationHelper.internal();
   static LocationHelper shared() => singleton;
+  Position? lastLocation; // أضف هذا السطر لتعريف lastLocation
 
   StreamSubscription<ServiceStatus>? serviceStatusStreamSub;
   String saveFilePath = "";
